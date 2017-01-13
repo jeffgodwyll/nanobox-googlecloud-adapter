@@ -1,0 +1,8 @@
+run.config:
+  engine: python
+  engine.config:
+    runtime: python-2.7
+    pip_install: 'pip install -r requirements.txt -I'
+
+web.main:
+  start: python app.py
