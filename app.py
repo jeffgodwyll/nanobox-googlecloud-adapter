@@ -118,7 +118,7 @@ def update_catalog():
                     'ram': int(machine['memoryMb']),
                     'cpu': int(machine['guestCpus']),
                     'disk': int(machine['maximumPersistentDisksSizeGb']),
-                    'transfer': 'unlimited?',
+                    'transfer': 'unlimited',
                     'dollars_per_hr': dollars_per_hr,
                     'dollars_per_mo': dollars_per_mo
                 }]
