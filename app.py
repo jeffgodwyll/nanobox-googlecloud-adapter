@@ -251,7 +251,7 @@ def bad_request(error=None):
 def not_found(error=None):
     message = {
         'status': 404,
-        'errors': 'Not found: {}'.format(request.url)
+        'errors': 'Not found: {}'.format(error.description)
     }
     resp = jsonify(message)
     resp.status_code = 404
