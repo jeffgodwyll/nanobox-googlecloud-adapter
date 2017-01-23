@@ -47,3 +47,71 @@ class ComputeApi(object):
             project=self.project_id).execute()
         machine_types = response.get('items')
         return machine_types
+
+    def instance(self, name=None, zone=None, machine_type=None):
+        """Create an instance associated with the compute engine service
+
+        :type name: str
+        :param name: The unique name of the instance.
+                     This will be used as the unique ID in nanobox
+
+        :type zone: str
+        :param zone: zone the instance will exist in
+                     this corresponds to the region in nanobox
+
+        :type machine_type: str
+        :param machine_type: machine type, for nanobox this corresponds to the
+                             server sizes
+        """
+        return Instance(client=self, name=name, zone=zone,
+                        machine_type=machine_type)
+
+
+class Instance(object):
+
+    """Compute Engine Instance.
+
+    :type name: str
+    :param name: the name of the instance
+
+    :type zone: str
+    :param zone: zone the instance will exist in
+
+    :machine_type: string: full or partial URL of the machine type resource
+                            to use
+                            eg: zones/zone/machineTypes/<machine-type>
+    :type machine_type: str
+    :param machine_type: machine type, for nanobox this corresponds to the
+                             server sizes
+
+    :type status: str
+    :param status: status of instance. [PENDING, RUNNING, DONE]
+    """
+
+    def __init__(self, client, name, zone, machine_type):
+        self.client = client
+        self.name = name
+        self.machine_type = machine_type
+        self.zone = zone
+        self.status = None
+    def list_instances(self):
+        """Get a list of all instances from all zones in the project"""
+
+        response = self.client.service.instances().aggregatedList(
+            project=self.client.project_id).execute()
+
+        zones = response.get('items', {})
+        instances = []
+        for zone in zones.values():
+            for instance in zone.get('instances', []):
+                instances.append(instance)
+
+        return instances
+
+    def find_instance(self, id):
+        instances = self.list_instances()
+        instance = next(
+            (instance for instance in instances if instance['name'] == id),
+            None)
+
+        return instance

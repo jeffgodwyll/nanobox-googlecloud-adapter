@@ -172,6 +172,36 @@ def servers():
     pass
 
 
+@app.route('/servers/<id>')
+def server(id):
+    service = client()
+
+    server = service.instance().find_instance(id)
+    instance = service.instance()
+    instances = instance.list_instances()
+    server = next(
+        (instance for instance in instances if instance['name'] == id), None)
+
+    if server is None:
+        abort(404, 'Server with id: `%s` not found' % id)
+
+    details = {}
+
+    details['id'] = server['name']
+    details['status'] = server['status']
+    details['name'] = server['name']
+    network_info = next(
+        (interface for interface in server['networkInterfaces']), None)
+    details['internal_ip'] = network_info.get('networkIP')
+    external_nat = next(
+        (access_config for access_config in network_info['accessConfigs']),
+        None
+    )
+    details['external_ip'] = external_nat['natIP']
+
+    return jsonify(details)
+
+
 @app.route('/servers/<id>/reboot')
 def server_reboot():
     pass
