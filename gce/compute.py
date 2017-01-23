@@ -94,6 +94,52 @@ class Instance(object):
         self.machine_type = machine_type
         self.zone = zone
         self.status = None
+        self.ssh_key = None
+
+    def _create_instance(self):
+
+        # get ubuntu image
+        image_response = self.client.service.images().getFromFamily(
+            project='ubuntu-os-cloud', family='ubuntu-1604-lts').execute()
+        source_disk_image = image_response['selfLink']
+
+        # configure the machine
+        machine_type = "zones/{}/machineTypes/{}".format(
+            self.zone, self.machine_type)
+
+        config = {
+            'name': self.name,
+            'machineType': machine_type,
+
+            'disks': [{
+                'boot': True,
+                'autoDelete': True,
+                'initializeParams': {'sourceImage': source_disk_image}
+            }],
+
+            'networkInterfaces': [{
+                'network': 'global/networks/default',
+                'accessConfigs': [{
+                    'type': 'ONE_TO_ONE_NAT',
+                    'name': 'Nanobox NAT'}]
+            }],
+            'metadata': {
+                'items': [{
+                    'key': 'sshKeys',
+                    'value': self.ssh_key}]
+            }
+        }
+
+        resp = self.client.service.instances().insert(
+            project=self.client.project_id,
+            zone=self.zone,
+            body=config).execute()
+
+        return resp
+
+    def create(self):
+        return self._create_instance()
+
     def list_instances(self):
         """Get a list of all instances from all zones in the project"""
 

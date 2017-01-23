@@ -166,10 +166,28 @@ def keys_id(id):
     pass
 
 
-@app.route('/servers', methods=['GET', 'POST'])
-@app.route('/servers/<id>')
+@app.route('/servers', methods=['POST'])
 def servers():
-    pass
+    service = client()
+
+    zone = request.form.get('region')
+    machine_type = request.form.get('size')
+    # TODO: name must match the ff regex:
+    # (?:[a-z](?:[-a-z0-9]{0,61}[a-z0-9])?)
+    name = request.form.get('name')
+    ssh_key = request.form.get('ssh_key')
+
+    instance = service.instance(
+        name=name, zone=zone, machine_type=machine_type)
+    instance.ssh_key = ssh_key
+    instance = instance.create()
+    instance_url = instance['targetLink']
+    id = instance_url.split('/')[-1]
+
+    response = jsonify(id=id)
+    response.status_code = 201
+
+    return response
 
 
 @app.route('/servers/<id>')
