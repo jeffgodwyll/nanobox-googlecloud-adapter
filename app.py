@@ -175,18 +175,11 @@ def servers():
 @app.route('/servers/<id>')
 def server(id):
     service = client()
-
     server = service.instance().find_instance(id)
-    instance = service.instance()
-    instances = instance.list_instances()
-    server = next(
-        (instance for instance in instances if instance['name'] == id), None)
-
     if server is None:
         abort(404, 'Server with id: `%s` not found' % id)
 
     details = {}
-
     details['id'] = server['name']
     details['status'] = server['status']
     details['name'] = server['name']
