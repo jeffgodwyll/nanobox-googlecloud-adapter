@@ -161,3 +161,15 @@ class Instance(object):
             None)
 
         return instance
+
+    def delete_instance(self,  instance_id):
+        instance = self.find_instance(instance_id)
+        if instance:
+            zone = self._process_zone_url(instance['zone'])
+            return self.client.service.instances().delete(
+                project=self.client.project_id,
+                zone=zone,
+                instance=instance_id).execute()
+
+    def _process_zone_url(self, zone):
+        return zone.split('/')[-1]

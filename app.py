@@ -213,6 +213,18 @@ def server(id):
     return jsonify(details)
 
 
+@app.route('/servers/<id>', methods=['DELETE'])
+def delete_server(id):
+    service = client()
+    server = service.instance().delete_instance(id)
+    if server is None:
+        abort(404, 'No Server with id: `%s` was previously ordered. '
+              'Cannot cancel non-existing server' % id)
+    print 'type of server is: ', type(server)
+    print server
+    return jsonify(server)
+
+
 @app.route('/servers/<id>/reboot')
 def server_reboot():
     pass
