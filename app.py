@@ -138,22 +138,10 @@ def update_catalog():
     return jsonify(catalog)
 
 
-@app.route('/machinetypes')
-def machinetypes():
-    with open('machinetypes.json') as data:
-        resp = json.load(data)
-    return jsonify(resp)
 
 
-@app.route('/admin/machinetypes')
-def update_machinetypes():
     service = client()
-    resp = service.machine_types()
 
-    with open('machinetypes.json', 'w') as output:
-        json.dump(resp, output)
-
-    return jsonify(resp)
 
 
 @app.route('/keys', methods=['GET', 'POST'])
