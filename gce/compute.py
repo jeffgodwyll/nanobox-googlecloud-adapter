@@ -13,6 +13,7 @@ class ComputeApi(object):
         if not isinstance(service_account, dict):
             raise ValueError('Not a dict: ' + str(service_account))
         self.project_id = service_account['project_id']
+        self.username = service_account['client_email']
         self.scopes = ['https://www.googleapis.com/auth/compute']
         self.credentials = self._create_credentials(service_account)
         self.service = self._create_compute_service_client()
@@ -66,6 +67,55 @@ class ComputeApi(object):
         return Instance(client=self, name=name, zone=zone,
                         machine_type=machine_type)
 
+    def set_project_ssh_key(self, value=None):
+        project_meta = self.service.projects().get(
+            project=self.project_id).execute()
+        fingerprint = project_meta['commonInstanceMetadata']['fingerprint']
+        if value is None:
+            key_value = ''
+        else:
+            if _is_valid_ssh_rsa_pub_key(value):
+                user = value.split()[-1]
+                key_value = '{user}:{value}'.format(
+                    user=user, value=value)
+            else:
+                raise ValueError('Invalid key. Required format: {}'.format(
+                    '<protocol> <key-blob> <username@example.com>'))
+
+        body = {
+            'fingerprint': fingerprint,
+            'items': [{
+                'key': 'sshKeys',
+                'value': key_value
+            }]
+        }
+        # the following request overrides all previously set items. Desired?
+        # TODO? check for key and append new val?
+        # only sshKeys key,val pair are desired at the moment
+        resp = self.service.projects().setCommonInstanceMetadata(
+            project=self.project_id, body=body).execute()
+        return resp
+
+    def get_project_ssh_key(self, id):
+        if id == self.username:
+            project_meta = self.service.projects().get(
+                project=self.project_id).execute()
+            items = project_meta['commonInstanceMetadata']['items']
+            ssh_item = next(item for item in items if item['key'] == 'sshKeys')
+            print ssh_item
+            return ssh_item['value']
+
+
+def _is_valid_ssh_rsa_pub_key(key):
+    """Checks if ssh_key is of the right format needed for use as ssh metadata
+    for a Compute Engine project
+    """
+    key = key.split()
+    if len(key) == 3:
+        protocol, pub_key, user = key
+        return protocol == 'ssh-rsa' and pub_key.startswith('AAAAB3NzaC1yc2EA')
+    return False
+
 
 class Instance(object):
 
@@ -94,7 +144,6 @@ class Instance(object):
         self.machine_type = machine_type
         self.zone = zone
         self.status = None
-        self.ssh_key = None
 
     def _create_instance(self):
 
@@ -123,11 +172,6 @@ class Instance(object):
                     'type': 'ONE_TO_ONE_NAT',
                     'name': 'Nanobox NAT'}]
             }],
-            'metadata': {
-                'items': [{
-                    'key': 'sshKeys',
-                    'value': self.ssh_key}]
-            }
         }
 
         resp = self.client.service.instances().insert(

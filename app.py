@@ -138,20 +138,45 @@ def update_catalog():
     return jsonify(catalog)
 
 
-
-
-    service = client()
-
-
-
-@app.route('/keys', methods=['GET', 'POST'])
+@app.route('/keys', methods=['POST'])
 def keys():
-    pass
+    service = client()
+    data = request.get_json()
+    key = data['key']
+    try:
+        ssh_key = service.set_project_ssh_key(key)
+    except ValueError as e:
+        abort(400, 'Invalid Key Format. {}'.format(e.message))
+    user = ssh_key['user']
+
+    response = jsonify(id=user)
+    response.status_code = 201
+
+    return response
 
 
 @app.route('/keys/<id>')
 def keys_id(id):
-    pass
+    service = client()
+    key_req = service.get_project_ssh_key(id)
+    if not key_req:
+        abort(404, 'key with id: `%s` not found' % id)
+
+    protocol, public_key, user = key_req.split(' ')
+
+    key = {}
+    key['name'] = user
+    key['id'] = user
+    key['public_key'] = public_key
+
+    return jsonify(key)
+
+
+@app.route('/keys/<id>', methods=['DELETE'])
+def delete_key(id):
+    service = client()
+    service.set_project_ssh_key()
+    return ('', 200)
 
 
 @app.route('/servers', methods=['POST'])
