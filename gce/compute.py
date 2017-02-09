@@ -82,7 +82,7 @@ class ComputeApi(object):
                     user=user, value=value)
             else:
                 raise ValueError('Invalid key. Required format: {}'.format(
-                    '<protocol> <key-blob> <username@example.com>'))
+                    '<protocol> <key-blob> <username>'))
 
         body = {
             'fingerprint': fingerprint,
