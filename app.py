@@ -1,6 +1,7 @@
+import json
+
 from flask import Flask, jsonify, request, abort
 from gce.compute import ComputeApi
-import json
 
 
 app = Flask(__name__)
@@ -79,8 +80,8 @@ def meta():
         "name": "Google Compute Engine",
         "server_nick_name": "vm",
         "default_region": "us-central1-a",
-        "default_size": "600mb",  # machine type instead?
-        "default_plan": "f1-micro",  # ?
+        "default_size": "f1-micro",
+        "default_plan": "f1-micro",
         "can_reboot": True,
         "can_rename": True,
         "credential_fields": [
@@ -109,13 +110,14 @@ def update_catalog():
             name = machine['name']
             dollars_per_hr = get_price(zone, name)
             dollars_per_mo = int(dollars_per_hr * 24 * 7 * 4)
+            memory = machine['memoryMb']
             plan = {
                 'name': name,
                 'id': name,
                 'specs': [{
-                    'id': machine['id'],
+                    'id': name,
                     'description': machine['description'],
-                    'ram': int(machine['memoryMb']),
+                    'ram': int(memory),
                     'cpu': int(machine['guestCpus']),
                     'disk': int(machine['maximumPersistentDisksSizeGb']),
                     'transfer': 'unlimited',
