@@ -185,19 +185,22 @@ def delete_key(id):
 def servers():
     service = client()
 
-    zone = request.form.get('region')
-    machine_type = request.form.get('size')
+    data = request.get_json()
+
+    zone = data['region']
+    machine_type = data['size']
     # TODO: name must match the ff regex:
     # (?:[a-z](?:[-a-z0-9]{0,61}[a-z0-9])?)
-    name = request.form.get('name')
-    ssh_key = request.form.get('ssh_key')
+    name = data['name']
+    name = encode_name(name)
 
     instance = service.instance(
         name=name, zone=zone, machine_type=machine_type)
-    instance.ssh_key = ssh_key
     instance = instance.create()
     instance_url = instance['targetLink']
+
     id = instance_url.split('/')[-1]
+    id = decode_name(id)
 
     response = jsonify(id=id)
     response.status_code = 201
@@ -205,16 +208,31 @@ def servers():
     return response
 
 
+def encode_name(name):
+    return name.replace('.', '-dot-')
+
+
+def decode_name(name):
+    return name.replace('-dot-', '.')
+
+
 @app.route('/servers/<id>')
 def server(id):
     service = client()
+    id = encode_name(id)
     server = service.instance().find_instance(id)
     if server is None:
         abort(404, 'Server with id: `%s` not found' % id)
 
     details = {}
     details['id'] = server['name']
-    details['status'] = server['status']
+
+    status = server['status']
+    if status == 'RUNNING':
+        details['status'] = 'active'
+    else:
+        details['status'] = status
+
     details['name'] = server['name']
     network_info = next(
         (interface for interface in server['networkInterfaces']), None)
@@ -231,13 +249,12 @@ def server(id):
 @app.route('/servers/<id>', methods=['DELETE'])
 def delete_server(id):
     service = client()
+    id = encode_name(id)
     server = service.instance().delete_instance(id)
     if server is None:
         abort(404, 'No Server with id: `%s` was previously ordered. '
               'Cannot cancel non-existing server' % id)
-    print 'type of server is: ', type(server)
-    print server
-    return jsonify(server)
+    return ('', 200)
 
 
 @app.route('/servers/<id>/reboot')
