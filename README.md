@@ -16,3 +16,7 @@ Install requirements:
 Run:
 
     python app.py
+
+###TODO
+- [ ] refactor into blueprints
+- [ ] tests :see_no_evil:
