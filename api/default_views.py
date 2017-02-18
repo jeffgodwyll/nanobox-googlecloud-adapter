@@ -6,9 +6,29 @@ from util import client
 default_views = Blueprint('default', __name__)
 
 META_INSTRUCTIONS = (
-    "Download service account json key from: "
-    "https://console.developers.google.com/project/_/apiui/credential "
-    "Copy its content into nanobox admin page."
+    """
+    Sign into the Google Cloud Developers' Console & create a project.
+    Enable the Compute Engine API by going to the API Management page of the
+    created project.
+
+    Download your service account JSON key file by doing the following:
+
+    <b>1.</b> Go to
+    <a href="https://console.developers.google.com/project/_/apiui/credential"
+    target="_blank">the credentials tab</a> on the API Management page.
+
+    <b>2.</b> Select <b>Service account key</b> from the
+    <em>new credentials</em> menu
+
+    <b>3.</b> Select a service account, the JSON key type and
+    <b>click create</b>.
+
+    Keep the JSON file safe.
+
+    We will copy the contents of the JSON key file into the
+    <b>Service Account</b> field on the next page.
+
+    """
 )
 
 
